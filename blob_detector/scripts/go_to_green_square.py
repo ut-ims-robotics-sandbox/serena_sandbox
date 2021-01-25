@@ -2,10 +2,22 @@
 
 import rospy
 from geometry_msgs.msg import Point
+from std_msgs.msg import Int32
 import cv2
 import cv_bridge
 from sensor_msgs.msg import Image
 import numpy as np
+
+
+
+def get_image(image_msg):
+    # This is the callback function that gets called whenever
+    # a new Image type message is published on the usb_cam/image_raw topic.
+    
+    global new_img_available, new_img_msg
+
+    new_img_available = True
+    new_img_msg = image_msg
 
 
 
@@ -35,32 +47,18 @@ def update_high_val(new_value):
 
 
 
-
-def get_image(image_msg):
-    # This is the callback function that gets called whenever
-    # a new Image type message is published on the usb_cam/image_raw topic.
-    
-    global new_img_available, new_img_msg
-
-    new_img_available = True
-    new_img_msg = image_msg
-
-
-
-
 # Create a boolean to keep track of whether we have a new image available or not
 new_img_available = False
 
 
 # Initialise the global variables that contain the threshold values
 # so that we can later change them by moving the sliders
-low_hue = 0
-low_sat = 0
-low_val = 0
+low_hue = 165
+low_sat = 91
+low_val = 131
 high_hue = 179
-high_sat = 255
-high_val = 255
-
+high_sat = 166
+high_val = 196
 
 
 
@@ -75,12 +73,14 @@ def main():
     # of the type Image on the usb_cam/image_raw topic
     rospy.Subscriber("usb_cam/image_raw", Image, get_image)
     blob_position_pub = rospy.Publisher("blob_location", Point, queue_size=1)
-    
+    blob_size_pub = rospy.Publisher("blob_size", Int32, queue_size=1)
 
     bridge = cv_bridge.core.CvBridge()
 
     cv2.namedWindow("Thresholded image", cv2.WINDOW_AUTOSIZE)
     cv2.namedWindow('blob_detector/go_to_green_square')
+    
+
  # Here we create the sliders that regulate the range of colour we wish to filter
     cv2.createTrackbar("low_hue", "Thresholded image", low_hue, 179, update_low_hue)
     cv2.createTrackbar("high_hue", "Thresholded image", high_hue, 179, update_high_hue)
@@ -94,29 +94,27 @@ def main():
 
 # Set all filters either on or off
     blob_parameters.filterByColor = True
-    blob_parameters.filterByArea = False
+    blob_parameters.filterByArea = True
     blob_parameters.filterByCircularity = False
     blob_parameters.filterByInertia = False
     blob_parameters.filterByConvexity = False
 
-# Define filter ranges. In practical applications, these only need
-# to be set for the filters that are turned on
-# Filter by colour
+
     blob_parameters.blobColor = 255 # Detect either black or white objects
 
 # Filter by size
-    blob_parameters.minArea = 0
-    blob_parameters.maxArea = 0
+    blob_parameters.minArea = 1491
+    blob_parameters.maxArea = 307200
 
 # Filter by shape
     blob_parameters.minCircularity = 0
-    blob_parameters.maxCircularity = 0
+    blob_parameters.maxCircularity = 1
 
     blob_parameters.minInertiaRatio = 0
-    blob_parameters.maxInertiaRatio = 0
+    blob_parameters.maxInertiaRatio = 1
 
     blob_parameters.minConvexity = 0
-    blob_parameters.maxConvexity = 0
+    blob_parameters.maxConvexity = 1
 
 # Set the minimum distance that needs to be between two blobs
 # in order for them both to be detected
@@ -132,7 +130,7 @@ def main():
         if new_img_available:
             # Convert the image from Image message to OpenCV image format
             cv_image = bridge.imgmsg_to_cv2(new_img_msg, desired_encoding='bgr8')
-            # Show the image in the window we created before the while-loop
+           
             cv2.imshow('blob_detector/go_to_green_square', cv_image)
             # Show the image for 1 ms. Without this line, the program will not work.
             cv2.waitKey(1)
@@ -155,7 +153,7 @@ def main():
     # Show the thresholded image in the same frame where we placed the sliders
             cv2.imshow("Thresholded image", thresholded_image)
 
-    
+            
 
     # Use the blob detector to detect shapes on the thresholded image
             keypoints = detector.detect(thresholded_image)
@@ -175,7 +173,8 @@ def main():
                 blob_position.y = y_coord
           
                 blob_position_pub.publish(blob_position)
-            
+                blob_size_pub.publish(blob_size)
+
 
     # If the letter Q is pressed on the keyboard, end the while-loop
         if cv2.waitKey(1) & 0xFF == ord('q'):
