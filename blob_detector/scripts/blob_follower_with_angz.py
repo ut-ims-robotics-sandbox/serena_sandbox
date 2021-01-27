@@ -30,7 +30,7 @@ def main():
     global new_blob_available, x_coord, size, robot_vel, velocity_pub
 
    
-    rospy.init_node("blob_follower")
+    rospy.init_node("blob_follower_with_angz")
     
     
     rospy.Subscriber("blob_location", blob, get_blob)
@@ -42,11 +42,14 @@ def main():
         if new_blob_available :
             robot_vel = Twist()
             if x_coord < 400 :
-                robot_vel.linear.y = 0.1
+               # robot_vel.linear.y = 0.1
+                robot_vel.angular.z = 0.15
             elif x_coord > 400 :
-                robot_vel.linear.y = -0.1          
+               # robot_vel.linear.y = -0.1
+                robot_vel.angular.z = -0.15          
             else:
-                robot_vel.linear.y = 0.0
+                #robot_vel.linear.y = 0.0
+                robot_vel.angular.z = 0.0
                 
             if size < 120:
                 robot_vel.linear.x = 0.1 
@@ -55,7 +58,6 @@ def main():
             else:
                 robot_vel.linear.x = 0.0
                 
-            robot_vel.angular.z = 0.0
 
             velocity_pub.publish(robot_vel)
             
