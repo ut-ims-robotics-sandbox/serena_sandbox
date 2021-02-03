@@ -1,37 +1,33 @@
 #!/usr/bin/env python2
 
 import rospy
-from geometry_msgs.msg import Point, Twist
-from std_msgs.msg import Int32
-from blob_detector.msg import blob
+from geometry_msgs.msg import Twist
 import cv2
 import cv_bridge
 from sensor_msgs.msg import Image
 import numpy as np
 
 
-low_hue = 120
-low_sat = 254
-low_val = 102
-high_hue = 121
+low_hue = 0
+low_sat = 0
+low_val = 0
+high_hue = 179
 high_sat = 255
-high_val = 103
+high_val = 255
 
 
 x_coord = 400
-size = 120 
+blob_size = 120 
 
 
 new_img_available = False
-new_blob_available = False
 
 
 state_tracking = True
-
 state_approaching_blob = False
 
-color = 1
 
+color = 1
 
 
 def get_image(image_msg):
@@ -42,33 +38,16 @@ def get_image(image_msg):
     new_img_msg = image_msg
 
 
-def get_blob(blob_position):
-    global new_blob_available, x_coord, size
-    new_blob_available = True
-    x_coord = blob_position.position.x
-    size = blob_position.size       
-
-
-
-
-    #global robot_vel, velocity_pub, low_hue, low_sat, low_val, high_hue, high_sat, high_val, lower_limits,                 upper_limits,                     thresholded_image, hsv_image, cv_image, keypoints, first_blob, x_coord_, y_coord_, blob_size,         blob_position, state_found_blob
-
-
-
-
-
 
 def main():
-    global blob_position_pub, velocity_pub, bridge, blob_parameters, detector, new_img_available, low_hue, low_sat, low_val, high_hue, high_sat, high_val, cv_image, hsv_image, state_tracking, state_approaching_blob, new_blob_available, robot_vel, x_coord, size, color
+    global velocity_pub, bridge, blob_parameters, detector, color, new_img_available, new_img_msg, low_hue, low_sat, low_val, high_hue, high_sat, high_val, cv_image, hsv_image, lower_limits, upper_limits, thresholded_image, keypoints, first_blob, robot_vel, x_coord, y_coord, blob_size, state_tracking, state_approaching_blob, new_blob_available
 
 
     rospy.init_node("follow_three_blobs_final")
 
 
     rospy.Subscriber("camera/color/image_raw", Image, get_image)
-    blob_position_pub = rospy.Publisher("blob_location", blob, queue_size=1)
 
-    rospy.Subscriber("blob_location", blob, get_blob)
     velocity_pub = rospy.Publisher("robotont/cmd_vel", Twist, queue_size=1)
 
 
@@ -123,20 +102,30 @@ def main():
             high_val = 103
 
         elif color == 2 :
-            low_hue = 1
-            low_sat = 2
-            low_val = 1
+            low_hue = 30
+            low_sat = 254
+            low_val = 101
+            high_hue = 31
+            high_sat = 255
+            high_val = 114
+
+        elif color == 3 :
+            low_hue = 0
+            low_sat = 250
+            low_val = 104
             high_hue = 1
-            high_sat = 2
-            high_val = 1
+            high_sat = 255
+            high_val = 123
 
         else :
-            low_hue = 0
-            low_sat = 4
-            low_val = 12
-            high_hue = 11
-            high_sat = 25
-            high_val = 10
+            color = 1
+            low_hue = 120
+            low_sat = 254
+            low_val = 102
+            high_hue = 121
+            high_sat = 255
+            high_val = 103
+
 
         if new_img_available:
 
@@ -165,41 +154,41 @@ def main():
 
             if len(keypoints) > 0:
                 first_blob = keypoints[0]
-                x_coord_ = int(first_blob.pt[0])
-                y_coord_ = int(first_blob.pt[1])
+                x_coord = int(first_blob.pt[0])
+                y_coord = int(first_blob.pt[1])
                 blob_size = int(first_blob.size)
-                print(x_coord_, y_coord_, blob_size)
-                blob_position = blob()
-                blob_position.position.x = x_coord_
-                blob_position.position.y = y_coord_
-                blob_position.size = blob_size
-                blob_position_pub.publish(blob_position)
+                print(x_coord, y_coord, blob_size)
+
                 state_tracking = False
                 state_approaching_blob = True
+            else: 
+                continue
+        else:
+            continue
 
         if state_approaching_blob :
 
-            if new_blob_available :
-                robot_vel = Twist()
-                if x_coord < 400 :           
-                    robot_vel.angular.z = 0.15
-                elif x_coord > 400 :          
-                    robot_vel.angular.z = -0.15          
-                else:
-                    robot_vel.angular.z = 0.0
+            
+            robot_vel = Twist()
+            if x_coord < 400 :
+                robot_vel.angular.z = 0.15
+            elif x_coord > 400 :
+                robot_vel.angular.z = -0.15
+            else:
+                robot_vel.angular.z = 0.0
 
-                if size < 120:
-                    robot_vel.linear.x = 0.1 
-                elif size > 120:
-                    robot_vel.linear.x = -0.1
-                else:
-                    robot_vel.linear.x = 0.0
+            if blob_size < 120:
+                robot_vel.linear.x = 0.1 
+            elif size > 120:
+                robot_vel.linear.x = -0.1
+            else:
+                robot_vel.linear.x = 0.0
 
-                velocity_pub.publish(robot_vel)
+            velocity_pub.publish(robot_vel)
 
-                new_blob_available = False
 
-            if size == 120 and x_coord == 400 :
+
+            if blob_size == 120 and x_coord == 400 :
 
                 robot_vel.linear.x = 0.0
                 robot_vel.linear.y = 0.0
@@ -210,8 +199,10 @@ def main():
                 state_tracking = True
 
                 color = color + 1
-
-
+            else:
+                continue
+        else:
+            continue
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
