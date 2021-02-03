@@ -70,10 +70,8 @@ def main():
 
     blob_parameters.blobColor = 255 
 
-
     blob_parameters.minArea = 1491
     blob_parameters.maxArea = 307200
-
 
     blob_parameters.minCircularity = 0
     blob_parameters.maxCircularity = 1
@@ -168,7 +166,6 @@ def main():
 
         if state_approaching_blob :
 
-            
             robot_vel = Twist()
             if x_coord < 400 :
                 robot_vel.angular.z = 0.15
