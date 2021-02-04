@@ -17,7 +17,7 @@ high_val = 255
 
 
 x_coord = 400
-blob_size = 120 
+blob_size = 210
 
 
 new_img_available = False
@@ -90,40 +90,46 @@ def main():
 
 
     while not rospy.is_shutdown():
-
+        # green
         if color == 1 :
-            low_hue = 120
-            low_sat = 254
+            low_hue = 86
+            low_sat = 189
             low_val = 102
-            high_hue = 121
+            high_hue = 111
             high_sat = 255
-            high_val = 103
+            high_val = 159
 
+        # brown
         elif color == 2 :
-            low_hue = 30
-            low_sat = 254
-            low_val = 101
-            high_hue = 31
+            low_hue = 11
+            low_sat = 172
+            low_val = 102
+            high_hue = 27
             high_sat = 255
-            high_val = 114
+            high_val = 204
 
+        # yellow
         elif color == 3 :
-            low_hue = 0
-            low_sat = 250
-            low_val = 104
-            high_hue = 1
+            low_hue = 26
+            low_sat =177
+            low_val = 99
+            high_hue = 42
             high_sat = 255
-            high_val = 123
+            high_val = 197
 
         else :
             color = 1
-            low_hue = 120
-            low_sat = 254
+            low_hue = 86
+            low_sat = 189
             low_val = 102
-            high_hue = 121
+            high_hue = 111
             high_sat = 255
-            high_val = 103
+            high_val = 159
 
+        if state_tracking:
+            robot_vel = Twist()
+            robot_vel.angular.z = 0.1
+            velocity_pub.publish(robot_vel)
 
         if new_img_available:
 
@@ -156,17 +162,16 @@ def main():
                 y_coord = int(first_blob.pt[1])
                 blob_size = int(first_blob.size)
                 print(x_coord, y_coord, blob_size)
-
+              
                 state_tracking = False
                 state_approaching_blob = True
-            else: 
+            else:
                 continue
         else:
             continue
 
         if state_approaching_blob :
 
-            robot_vel = Twist()
             if x_coord < 400 :
                 robot_vel.angular.z = 0.15
             elif x_coord > 400 :
@@ -174,9 +179,9 @@ def main():
             else:
                 robot_vel.angular.z = 0.0
 
-            if blob_size < 120:
+            if blob_size < 210:
                 robot_vel.linear.x = 0.1 
-            elif size > 120:
+            elif blob_size > 210:
                 robot_vel.linear.x = -0.1
             else:
                 robot_vel.linear.x = 0.0
@@ -184,8 +189,8 @@ def main():
             velocity_pub.publish(robot_vel)
 
 
-
-            if blob_size == 120 and x_coord == 400 :
+            
+            if blob_size > 210 :
 
                 robot_vel.linear.x = 0.0
                 robot_vel.linear.y = 0.0
@@ -194,10 +199,10 @@ def main():
                 velocity_pub.publish(robot_vel)
                 state_approaching_blob = False
                 state_tracking = True
-
                 color = color + 1
             else:
                 continue
+
         else:
             continue
 
