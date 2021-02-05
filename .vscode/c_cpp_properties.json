@@ -1,0 +1,19 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/serenashi/catkin_ws/devel/include/**",
+        "/opt/ros/melodic/include/**",
+        "/home/serenashi/catkin_ws/src/serena_sandbox/beginner_tutorials/include/**",
+        "/home/serenashi/catkin_ws/src/robotont_demos/include/**",
+        "/home/serenashi/catkin_ws/src/robotont_driver/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ]
+}

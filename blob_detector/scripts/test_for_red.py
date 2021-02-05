@@ -9,15 +9,14 @@ import numpy as np
 
 
 low_hue = 0
-low_sat = 0
-low_val = 0
-high_hue = 179
+low_sat =204
+low_val = 95
+high_hue = 11
 high_sat = 255
-high_val = 255
+high_val = 150
 
-
-x_coord = 300
-blob_size = 330
+x_coord = 400
+blob_size = 120 
 
 
 new_img_available = False
@@ -90,56 +89,9 @@ def main():
 
 
     while not rospy.is_shutdown():
-        # green
-        if color == 1 :
-            low_hue = 86
-            low_sat = 189
-            low_val = 102
-            high_hue = 111
-            high_sat = 255
-            high_val = 159
 
-            #print("values to green blob")
 
-        # brown
-        elif color == 2 :
-            low_hue = 14
-            low_sat = 175
-            low_val = 99
-            high_hue = 19
-            high_sat = 255
-            high_val = 145
 
-            #print("values to brown blob")
-
-        # yellow
-        elif color == 3 :
-            low_hue = 26
-            low_sat =177
-            low_val = 99
-            high_hue = 42
-            high_sat = 255
-            high_val = 197
-
-            #print("values to yellow blob")
-
-        else :
-            color = 1
-            low_hue = 86
-            low_sat = 189
-            low_val = 102
-            high_hue = 111
-            high_sat = 255
-            high_val = 159
-
-            #print("values to green blob")
-
-        if state_tracking:
-            robot_vel = Twist()
-            robot_vel.angular.z = 0.5
-            velocity_pub.publish(robot_vel)
-
-            print("tracking blob")
 
         if new_img_available:
 
@@ -158,7 +110,7 @@ def main():
 
 
             thresholded_image = cv2.inRange(hsv_image, lower_limits, upper_limits)
-            #thresholded_image = cv2.bitwise_and(cv_image, cv_image, mask = thresholded_image)
+            thresholded_image = cv2.bitwise_and(cv_image, cv_image, mask = thresholded_image)
 
 
             cv2.imshow("Thresholded image", thresholded_image)
@@ -171,51 +123,12 @@ def main():
                 x_coord = int(first_blob.pt[0])
                 y_coord = int(first_blob.pt[1])
                 blob_size = int(first_blob.size)
-                print("x_coord: " + str(x_coord) + ", y_coord: " + str(y_coord) + ", blob_size: " + str(blob_size))
-                print("found blob")
-                state_tracking = False
-                state_approaching_blob = True
-            else:
-                continue
-        else:
-            continue
-
-        if state_approaching_blob :
-
-            if x_coord < 300 :
-                robot_vel.angular.z = 0.15
-            elif x_coord > 300 :
-                robot_vel.angular.z = -0.15
-            else:
-                robot_vel.angular.z = 0.0
-
-            if blob_size < 330:
-                robot_vel.linear.x = 0.1
-            elif blob_size > 330:
-                robot_vel.linear.x = -0.1
-            else:
-                robot_vel.linear.x = 0.0
-
-            velocity_pub.publish(robot_vel)
-            print("approaching blob")
+                print(x_coord, y_coord, blob_size)
 
 
-            if blob_size > 330 :
 
-                robot_vel.linear.x = 0.0
-                robot_vel.linear.y = 0.0
-                robot_vel.angular.z = 0.0
 
-                velocity_pub.publish(robot_vel)
-                state_approaching_blob = False
-                state_tracking = True
-                color = color + 1
-                print("arrived to blob and will track the next blob")
-            else:
-                continue
 
-        else:
-            continue
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break

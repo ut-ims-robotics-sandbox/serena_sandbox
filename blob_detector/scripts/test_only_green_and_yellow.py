@@ -17,7 +17,7 @@ high_val = 255
 
 
 x_coord = 300
-blob_size = 330
+blob_size = 370
 
 
 new_img_available = False
@@ -101,19 +101,9 @@ def main():
 
             #print("values to green blob")
 
-        # brown
-        elif color == 2 :
-            low_hue = 14
-            low_sat = 175
-            low_val = 99
-            high_hue = 19
-            high_sat = 255
-            high_val = 145
-
-            #print("values to brown blob")
 
         # yellow
-        elif color == 3 :
+        elif color == 2 :
             low_hue = 26
             low_sat =177
             low_val = 99
@@ -158,7 +148,7 @@ def main():
 
 
             thresholded_image = cv2.inRange(hsv_image, lower_limits, upper_limits)
-            #thresholded_image = cv2.bitwise_and(cv_image, cv_image, mask = thresholded_image)
+            thresholded_image = cv2.bitwise_and(cv_image, cv_image, mask = thresholded_image)
 
 
             cv2.imshow("Thresholded image", thresholded_image)
@@ -189,9 +179,9 @@ def main():
             else:
                 robot_vel.angular.z = 0.0
 
-            if blob_size < 330:
+            if blob_size < 370:
                 robot_vel.linear.x = 0.1
-            elif blob_size > 330:
+            elif blob_size > 370:
                 robot_vel.linear.x = -0.1
             else:
                 robot_vel.linear.x = 0.0
@@ -200,7 +190,7 @@ def main():
             print("approaching blob")
 
 
-            if blob_size > 330 :
+            if blob_size > 370 :
 
                 robot_vel.linear.x = 0.0
                 robot_vel.linear.y = 0.0
